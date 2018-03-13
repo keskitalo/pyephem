@@ -9,7 +9,7 @@
  * the difference; then precess to Mjd.
  */
 void
-ap_as (Now *np, double Mjd, double *rap, double *decp)
+ap_as (Now *np, double Mjd, double *rap, double *decp, int deaberrate)
 {
 	double r0 = *rap, d0 = *decp;
 	Obj o;
@@ -18,6 +18,8 @@ ap_as (Now *np, double Mjd, double *rap, double *decp)
 	/* as -> ap */
 	zero_mem ((void *)&o, sizeof(o));
 	o.o_type = FIXED;
+	if (!deaberrate)
+	    o.f_no_aber = 1;
 	o.f_RA = *rap;
 	o.f_dec = *decp;
 	o.f_epoch = mjd;
@@ -28,7 +30,6 @@ ap_as (Now *np, double Mjd, double *rap, double *decp)
 	*decp -= o.s_dec - *decp;
 
 	/* then back to start for second order correction */
-	o.o_type = FIXED;
 	o.f_RA = *rap;
 	o.f_dec = *decp;
 	o.f_epoch = mjd;
@@ -39,21 +40,25 @@ ap_as (Now *np, double Mjd, double *rap, double *decp)
 	*decp -= o.s_dec - d0;
 
 	radecrange (rap, decp);
-	precess (mjd, Mjd, rap, decp);
-	radecrange (rap, decp);
+	if (Mjd != EOD) {
+	  precess (mjd, Mjd, rap, decp);
+	  radecrange (rap, decp);
+	}
 }
 
 /* convert the given astrometric RA/Dec which are precessed to Mjd into
  * apparent @ EOD IN PLACE.
  */
 void
-as_ap (Now *np, double Mjd, double *rap, double *decp)
+as_ap (Now *np, double Mjd, double *rap, double *decp, int aberrate)
 {
 	Obj o;
 	Now n;
 
 	zero_mem ((void *)&o, sizeof(o));
 	o.o_type = FIXED;
+	if (!aberrate)
+	    o.f_no_aber = 1;
 	o.f_RA = *rap;
 	o.f_dec = *decp;
 	o.f_epoch = Mjd;

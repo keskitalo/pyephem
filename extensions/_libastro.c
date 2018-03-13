@@ -941,18 +941,23 @@ static PyObject *Observer_radec_of(PyObject *self, PyObject *args,
 				   PyObject *kwds)
 {
      Observer *o = (Observer*) self;
-     static char *kwlist[] = {"az", "alt", 0};
-     PyObject *azo, *alto, *rao, *deco;
+     static char *kwlist[] = {"az", "alt", "fixed", NULL};
+     PyObject *azo, *alto, *rao, *deco, *fixedo=NULL;
      double az, alt, lst, ha, ra, dec;
+     int fixed;
 
-     if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO:Observer.radec_of",
-				      kwlist, &azo, &alto))
+     if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:Observer.radec_of",
+				      kwlist, &azo, &alto, &fixedo))
 	  return 0;
 
      if (parse_angle(azo, raddeg(1), &az) == -1)
 	  return 0;
      if (parse_angle(alto, raddeg(1), &alt) == -1)
 	  return 0;
+
+     /* Do the coordinates refer to a fixed object (should we correct for
+	aberration and deflection) ? */
+     fixed = (!fixedo || fixedo == Py_True);
 
      now_lst(&o->now, &lst);
      lst = hrrad(lst);
@@ -961,8 +966,7 @@ static PyObject *Observer_radec_of(PyObject *self, PyObject *args,
      ra = fmod(lst - ha, 2*PI);
 
      pref_set(PREF_EQUATORIAL, PREF_TOPO); /* affects call to ap_as? */
-     if (o->now.n_epoch != EOD)
-	  ap_as(&o->now, o->now.n_epoch, &ra, &dec);
+     ap_as(&o->now, o->now.n_epoch, &ra, &dec, fixed);
 
      rao = new_Angle(ra, radhr(1));
      if (!rao) return 0;
@@ -1012,8 +1016,15 @@ static PyMethodDef Observer_methods[] = {
       "compute the local sidereal time for this location and time"},
      {"radec_of", (PyCFunction) Observer_radec_of,
       METH_VARARGS | METH_KEYWORDS,
-      "compute the right ascension and declination of a point"
-      " identified by its azimuth and altitude"},
+      "o.radec_of(az, alt, fixed=True)\n"
+      "\nCompute the right ascension and declination of a point.\n"
+      "\nArgs:\n"
+      "    az: Azimuth of the point.\n"
+      "    alt: Altitude of the point.\n"
+      "    fixed: if True, apply stellar aberration and solar deflection"
+      " corrections.\n"
+      "\nReturns:\n"
+      "    ra, dec: Astrometric Right Ascension and Declination behind Az/Alt."},
      {NULL}
 };
 

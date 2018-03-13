@@ -192,7 +192,7 @@ radec2ha (Now *np, double ra, double dec, double *hap)
 	double ha, lst;
 
 	if (epoch != EOD)
-	    as_ap (np, epoch, &ra, &dec);
+	    as_ap (np, epoch, &ra, &dec, 1);
 	now_lst (np, &lst);
 	ha = hrrad(lst) - ra;
 	if (ha < 0)

@@ -169,7 +169,8 @@ typedef unsigned char byte;
     double fo_dec;	/* dec, rads, in epoch frame */ 		\
     float fo_pmra;	/* ra proper motion, rads/day/cos(dec) */ 	\
     float fo_pmdec;	/* dec proper motion, rads/day */ 		\
-    char  fo_class	/* object class */
+    char  fo_class;	/* object class */                              \
+    int fo_no_aber      /* do not aberrate */
 
 /* a generic object */
 typedef struct {
@@ -405,6 +406,7 @@ typedef union {
 #define	f_pmdec		f.fo_pmdec
 #define	f_mag		f.fo_mag
 #define	f_size		f.fo_size
+#define	f_no_aber	f.fo_no_aber
 
 #define	e_cepoch 	e.eo_cepoch
 #define	e_epoch		e.eo_epoch
@@ -487,7 +489,7 @@ typedef union {
 enum ObjType {
     UNDEFOBJ=0,
     FIXED, BINARYSTAR, ELLIPTICAL, HYPERBOLIC, PARABOLIC, EARTHSAT, PLANET,
-    NOBJTYPES
+    NOBJTYPES, FIXEDNOABER
 };
 
 /* types as handy bitmasks too */
@@ -602,8 +604,8 @@ extern void airmass (double aa, double *Xp);
 extern void anomaly (double ma, double s, double *nu, double *ea);
 
 /* ap_as.c */
-extern void ap_as ( Now *np, double Mjd, double *rap, double *decp);
-extern void as_ap ( Now *np, double Mjd, double *rap, double *decp);
+extern void ap_as ( Now *np, double Mjd, double *rap, double *decp, int deaberrate);
+extern void as_ap ( Now *np, double Mjd, double *rap, double *decp, int aberrate);
 
 /* atlas.c */
 extern char *um_atlas (double ra, double dec);

@@ -42,13 +42,13 @@ obj_cir (Now *np, Obj *op)
 {
 	op->o_flags &= ~NOCIRCUM;
 	switch (op->o_type) {
-	case BINARYSTAR: return (obj_binary (np, op));
-	case FIXED:	 return (obj_fixed (np, op));
-	case ELLIPTICAL: return (obj_elliptical (np, op));
-	case HYPERBOLIC: return (obj_hyperbolic (np, op));
-	case PARABOLIC:  return (obj_parabolic (np, op));
-	case EARTHSAT:   return (obj_earthsat (np, op));
-	case PLANET:     return (obj_planet (np, op));
+	case BINARYSTAR:  return (obj_binary (np, op));
+	case FIXED:       return (obj_fixed (np, op));
+	case ELLIPTICAL:  return (obj_elliptical (np, op));
+	case HYPERBOLIC:  return (obj_hyperbolic (np, op));
+	case PARABOLIC:   return (obj_parabolic (np, op));
+	case EARTHSAT:    return (obj_earthsat (np, op));
+	case PLANET:      return (obj_planet (np, op));
 	default:
 	    printf ("obj_cir() called with type %d %s\n", op->o_type, op->o_name);
 	    abort();
@@ -104,7 +104,7 @@ static int
 obj_binary (Now *np, Obj *op)
 {
 	/* always compute circumstances of primary */
-	if (obj_fixed (np, op) < 0)
+        if (obj_fixed (np, op) < 0)
 	    return (0);
 
 	/* compute secondary only if requested, and always reset request flag */
@@ -215,6 +215,7 @@ obj_fixed (Now *np, Obj *op)
 	double ra, dec;		/* ra and dec at equinox of date */
 	double rpm, dpm; 	/* astrometric ra and dec with PM to now */
 	double lst;
+	int aberrate; /* Apply stellar aberration and solar deflection */
 
 	/* on the assumption that the user will stick with their chosen display
 	 * epoch for a while, we move the defining values to match and avoid
@@ -261,7 +262,9 @@ obj_fixed (Now *np, Obj *op)
 	sunpos (mjed, &lsn, &rsn, NULL);
 
 	/* allow for relativistic light bending near the sun */
-	deflect (mjed, lam, bet, lsn, rsn, 1e10, &ra, &dec);
+	aberrate = !op->f_no_aber;
+	if (aberrate)
+	  deflect (mjed, lam, bet, lsn, rsn, 1e10, &ra, &dec);
 
 	/* TODO: correction for annual parallax would go here */
 
@@ -269,7 +272,8 @@ obj_fixed (Now *np, Obj *op)
 	 * geocentric
 	 */
 	nut_eq(mjed, &ra, &dec);
-	ab_eq(mjed, lsn, &ra, &dec);
+	if (aberrate)
+	  ab_eq(mjed, lsn, &ra, &dec);
 	op->s_gaera = ra;
 	op->s_gaedec = dec;
 
